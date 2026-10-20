@@ -1,0 +1,20 @@
+{
+  "trading": {
+    "symbol": "BTC/USDC",
+    "baseAsset": "tUSDC",
+    "leverage": 5,
+    "positionSizePercent": 10,
+    "maxOpenPositions": 2,
+    "stopLossPercent": 2.5,
+    "takeProfitPercent": 5.0
+  },
+  "grid": {
+    "enabled": true,
+    "gridLevels": 5,
+    "spacingPercent": 0.8
+  },
+  "risk": {
+    "maxDrawdownDailyPercent": 15,
+    "minGasReserveSTT": 2.0
+  }
+}
