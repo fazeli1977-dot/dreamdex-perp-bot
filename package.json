@@ -1,0 +1,14 @@
+﻿{
+  "name": "dreamdex-perp-guard-bot",
+  "version": "1.0.0",
+  "description": "DreamDEX Perpetuals Risk & Trading Bot for Somnia Testnet",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "@somnia-chain/markets-sdk": "latest",
+    "ethers": "^6.13.0",
+    "dotenv": "^16.4.5"
+  }
+}
