@@ -1,30 +1,62 @@
-﻿import { ethers } from "ethers";
+﻿import 'dotenv/config';
+import { ethers } from 'ethers';
 
-const RPC_URL = "https://api.hideki.infra.testnet.somnia.network";
-const CHAIN_ID = 50383; // Somnia Hideki Testnet (Perps)
-const WALLET_ADDRESS = "0xf3ddb743b4f1BD8b59Bf5Bf22905555Fe5c4B7C1";
+const RPC_URL = process.env.RPC_URL || 'https://dream-rpc.somnia.network';
+const PRIVATE_KEY = (process.env.PRIVATE_KEY || '').trim();
 
-async function main() {
-  console.log("=== Starting DreamDEX Perp Risk & Health Bot ===");
-  console.log(`Connecting to Somnia Hideki Testnet (Chain ID: ${CHAIN_ID})...`);
-
-  const provider = new ethers.JsonRpcProvider(RPC_URL);
-  
-  try {
-    const network = await provider.getNetwork();
-    console.log(`Connected to Network: ${network.name} (ChainID: ${network.chainId})`);
-
-    const balance = await provider.getBalance(WALLET_ADDRESS);
-    console.log(`Account: ${WALLET_ADDRESS}`);
-    console.log(`Gas Balance: ${ethers.formatEther(balance)} STT`);
-
-    console.log("\n[DreamDEX Perps Health Monitor]");
-    console.log("Status: Listening to Orderbook and Position State via Markets SDK...");
-    console.log("Target Market: BTC-PERP / ETH-PERP");
-    console.log("Risk Guard: Active (Auto TP/SL & Liquidation Barrier Enabled)");
-  } catch (error) {
-    console.error("Connection error:", error.message);
-  }
+if (!PRIVATE_KEY) {
+  console.error('❌ Error: PRIVATE_KEY is missing in .env file');
+  process.exit(1);
 }
 
-main();
+// Somnia Testnet Verified Token Contract
+const TUSDC_ADDRESS = '0x70a86D8842FB63C4Ad2b7cdddF530eBf1BB25d8E';
+
+const ERC20_ABI = [
+  'function balanceOf(address owner) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+  'function symbol() view returns (string)'
+];
+
+async function main() {
+  const provider = new ethers.JsonRpcProvider(RPC_URL);
+  const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+
+  console.log('==========================================');
+  console.log('🤖 dreamDEX Perpetuals Bot Initialized');
+  console.log('📡 Connected to Network: Somnia Testnet');
+  console.log(`👛 Bot Wallet Address: ${signer.address}`);
+  console.log('==========================================');
+
+  // Check STT balance (Gas)
+  const sttBalance = await provider.getBalance(signer.address);
+  console.log(`⛽ STT Balance: ${ethers.formatEther(sttBalance)} STT`);
+
+  // Check tUSDC balance
+  try {
+    const tusdcContract = new ethers.Contract(TUSDC_ADDRESS, ERC20_ABI, signer);
+    const balance = await tusdcContract.balanceOf(signer.address);
+    let decimals = 18;
+    let symbol = 'tUSDC';
+
+    try {
+      decimals = await tusdcContract.decimals();
+    } catch {}
+
+    try {
+      symbol = await tusdcContract.symbol();
+    } catch {}
+
+    const formatted = ethers.formatUnits(balance, decimals);
+    console.log(`💵 ${symbol} Balance: ${formatted} ${symbol}`);
+  } catch (err) {
+    console.error('❌ Could not query token balance:', err.message);
+  }
+
+  console.log('------------------------------------------');
+  console.log('✅ Bot check completed successfully.');
+}
+
+main().catch((err) => {
+  console.error('❌ Bot fatal error:', err);
+});
